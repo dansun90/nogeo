@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  // STRICTLY REQUIRED IN V7: You must specify where to generate the client
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Note: No 'url' field here anymore! It is handled by prisma.config.ts
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  supabaseUid String   @unique
+  // NEW: Fields required by API V3.1 /user/me
+  subscriptionStatus        String   @default("free") // 'free', 'pro', 'canceled'
+  monthlyCreditsRemaining   Int      @default(5)      // Free tier starts with 5
+  purchasedCreditsRemaining Int      @default(0)
+  
+  // For Sprint 3 (Stripe)
+  stripeCustomerId          String?
+  reports   SearchReport[]
+}
+
+model SearchReport {
+  id             String   @id @default(uuid())
+  originalQuery  String
+  finalAnswer    String
+  fullReportJson Json
+  createdAt      DateTime @default(now())
+
+  totalTokens    Int      @default(0)
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  
+  userId         String? 
+  user           User?    @relation(fields: [userId], references: [id])
+}
